@@ -24,7 +24,7 @@ RUN apk add --no-cache python3 make g++
 COPY railway-env.js .
 
 # Expose the port the app runs on
-EXPOSE 3000
+EXPOSE 8080
 
 # Map Railway's environment variables and start the application
 CMD ["sh", "-c", "node railway-env.js && node dist/main.js"]

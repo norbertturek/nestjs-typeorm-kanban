@@ -26,10 +26,11 @@ async function bootstrap() {
     },
   });
 
-  const port = process.env.PORT ?? 3000;
-  await app.listen(port);
-  console.log(`Application is running on: http://localhost:${port}`);
-  console.log(`API Documentation: http://localhost:${port}/api`);
+  // Use the PORT provided by Railway or default to 3000
+  const port = process.env.PORT || 8080;
+  await app.listen(port, '0.0.0.0');
+  console.log(`Application is running on port: ${port}`);
+  console.log(`API Documentation: /api`);
 }
 
 bootstrap();
