@@ -7,12 +7,14 @@ import { ProjectColumn } from './entities/project-column.entity';
 import { Task } from './entities/task.entity';
 import { ProjectColumnsModule } from './project-columns/project-columns.module';
 import { TasksModule } from './tasks/tasks.module';
+import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Project, ProjectColumn, Task]),
     ProjectColumnsModule,
     TasksModule,
+    UsersModule,
   ],
   controllers: [ProjectsController],
   providers: [ProjectsService],

@@ -5,8 +5,11 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { ProjectColumn } from './project-column.entity';
+import { User } from '../../users/entities/user.entity';
 
 @Entity('projects')
 export class Project {
@@ -24,6 +27,13 @@ export class Project {
 
   @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
+
+  @ManyToOne(() => User, (user) => user.projects, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'userId' })
+  user: User;
+
+  @Column({ type: 'varchar', nullable: false })
+  userId: string;
 
   @OneToMany(() => ProjectColumn, (column) => column.project, {
     cascade: true,

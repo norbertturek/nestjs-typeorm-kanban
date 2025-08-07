@@ -16,6 +16,12 @@ export class CreateProjectDto {
   description?: string;
 
   @ApiProperty({
+    description: 'The email of the user creating the project',
+    example: 'user@example.com',
+  })
+  email: string;
+
+  @ApiProperty({
     description: 'Optional array of columns to create with the project',
     type: [CreateColumnDto],
     required: false,

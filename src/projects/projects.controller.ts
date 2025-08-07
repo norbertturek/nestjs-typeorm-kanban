@@ -9,6 +9,8 @@ import {
   HttpStatus,
   HttpCode,
   ParseIntPipe,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -25,13 +27,20 @@ import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { Project } from './entities/project.entity';
+import { Request } from 'express';
+import { UsersService } from '../users/users.service';
+import { ClerkGuard } from '../auth/clerk.guard';
 
 @ApiTags('Projects')
 @Controller('projects')
 export class ProjectsController {
-  constructor(private readonly projectsService: ProjectsService) {}
+  constructor(
+    private readonly projectsService: ProjectsService,
+    private readonly usersService: UsersService,
+  ) {}
 
   @Post()
+  @UseGuards(ClerkGuard)
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create a new project' })
   @ApiCreatedResponse({
@@ -40,18 +49,32 @@ export class ProjectsController {
   })
   @ApiBadRequestResponse({ description: 'Invalid input data' })
   @ApiBody({ type: CreateProjectDto })
-  async create(@Body() createProjectDto: CreateProjectDto): Promise<Project> {
-    return await this.projectsService.create(createProjectDto);
+  async create(
+    @Body() createProjectDto: CreateProjectDto,
+    @Req() req: Request,
+  ): Promise<Project> {
+    // Get sub (userId) from JWT and email from request body
+    const { sub } = (req as any).auth;
+    const { email } = createProjectDto;
+    
+    if (!sub || !email) {
+      throw new Error('Brak danych użytkownika (sub lub email)');
+    }
+    
+    const user = await this.usersService.findOrCreate({ id: sub, email });
+    return await this.projectsService.createForUser(createProjectDto, user.id);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all projects' })
+  @UseGuards(ClerkGuard)
+  @ApiOperation({ summary: 'Get all projects for the authenticated user' })
   @ApiOkResponse({
-    description: 'Return all projects',
+    description: 'Return all projects for the authenticated user',
     type: [Project],
   })
-  async findAll(): Promise<Project[]> {
-    return await this.projectsService.findAll();
+  async findAll(@Req() req: Request): Promise<Project[]> {
+    const { sub } = (req as any).auth;
+    return await this.projectsService.findAllForUser(sub);
   }
 
   @Get(':id')

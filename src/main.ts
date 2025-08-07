@@ -37,8 +37,8 @@ async function bootstrap() {
     },
   });
 
-  // Use the PORT provided by Railway or default to 3000
-  const port = process.env.PORT || 8080;
+  // Use the PORT provided by environment or default to 3000 for local development
+  const port = process.env.PORT || 3000;
   await app.listen(port, '0.0.0.0');
 
   console.log('Application is running on port:', port);

@@ -1,19 +1,17 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { CreateColumnDto } from './dto/create-column.dto';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
-import { Project } from './entities/project.entity';
 import { ProjectColumn } from './entities/project-column.entity';
-import { CreateColumnDto } from './dto/create-column.dto';
+import { Project } from './entities/project.entity';
 
 @Injectable()
 export class ProjectsService {
   constructor(
     @InjectRepository(Project)
     private projectsRepository: Repository<Project>,
-    @InjectRepository(ProjectColumn)
-    private columnsRepository: Repository<ProjectColumn>,
   ) {}
 
   private getDefaultColumns(): CreateColumnDto[] {
@@ -26,7 +24,7 @@ export class ProjectsService {
 
   async create(createProjectDto: CreateProjectDto): Promise<Project> {
     const project = this.projectsRepository.create(createProjectDto);
-    
+
     const columnsData = createProjectDto.columns?.length
       ? createProjectDto.columns
       : this.getDefaultColumns();
@@ -39,6 +37,33 @@ export class ProjectsService {
     });
 
     return await this.projectsRepository.save(project);
+  }
+
+  async createForUser(
+    createProjectDto: CreateProjectDto,
+    userId: string,
+  ): Promise<Project> {
+    const project = this.projectsRepository.create({
+      ...createProjectDto,
+      userId,
+    });
+    const columnsData = createProjectDto.columns?.length
+      ? createProjectDto.columns
+      : this.getDefaultColumns();
+    project.columns = columnsData.map((columnData, index) => {
+      const column = new ProjectColumn();
+      column.name = columnData.name;
+      column.order = columnData.order ?? index;
+      return column;
+    });
+    return await this.projectsRepository.save(project);
+  }
+
+  async findAllForUser(userId: string): Promise<Project[]> {
+    return await this.projectsRepository.find({
+      where: { userId },
+      relations: ['columns', 'columns.tasks']
+    });
   }
 
   async findAll(): Promise<Project[]> {
